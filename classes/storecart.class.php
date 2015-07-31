@@ -592,6 +592,15 @@ class StoreCart extends Base
 					$_SESSION[$this->sessionname][$rowid]['attendees'][$attid]['att_surname'] = $data['att_surname'][$key];
 				} //else echo'not set';
 			//	$this->VarDump($_SESSION[$this->sessionname][$rowid]);
+			
+			// Sending email to attendee...
+			$mail = new HTMLMail();
+			$mail->SetSubject('Important message from IIDR');
+			$plainbody = 'Course is booked.';
+			$htmlbody = 'Course is booked.';
+			$mail->Send($att_email, $htmlbody, $plainbody);
+			$success[] = 'An email has been send to the attendee.';
+			
 			}
 		}
 		

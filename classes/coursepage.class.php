@@ -84,7 +84,9 @@ class CoursePage extends BasePage
 		static $tickets = array();
 		if (is_null($buy_enabled))
 		{	$buy_enabled = false;
-			if ($this->course->tickets && $this->course->IsBookable())
+			
+			/*$this->course->IsBookable()*/
+			if ($this->course->tickets)
 			{	foreach($this->course->tickets as $ticket_row)
 				{	$ticket = new CourseTicket($ticket_row);
 					$status = $ticket->GetStatus();
