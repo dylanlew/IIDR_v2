@@ -175,21 +175,31 @@ class StoreCart extends Base
 	{	return $this->errors;	
 	} // end of fn GetErrors
 	
-	public function DiscountAppliesToItem($item = array(), $discount = array())
-	{	if ($discount['prodtype'])
-		{	if ($discount['prodtype'] == $item['type'])
-			{	if ($discount['prodid'])
-				{	switch ($item['type'])
-					{	case 'course': return $discount['prodid'] == $item['product']->course->id;
-						case 'event': return $discount['prodid'] == $item['product']->course->id;
-						case 'store': return $discount['prodid'] == $item['product']->id;
+	public function DiscountAppliesToItem($item = array(), $discount = array()){
+		if($discount['prodtype']){
+			if ($discount['prodtype'] == $item['type']){
+				if($discount['prodid']){
+					switch ($item['type']){
+						case 'course': 
+						case 'event':
+							if($discount['prodid'] == $item['product']->course->id){
+								if($discount['ticket']==$item['product']->ticket->details['tid']){
+									return true;
+								}else{
+									return false;
+								}
+							}
+						case 'store': 
+							return $discount['prodid'] == $item['product']->id;
+						default:
+							return false;
 					}
-				} else
-				{	return true;
+				}else{
+					return true;
 				}
 			}
-		} else
-		{	return true;
+		}else{
+			return true;
 		}
 	} // end of fn DiscountAppliesToItem
 	
@@ -302,20 +312,20 @@ class StoreCart extends Base
 							$amount_to_apply = $discount_applied['discamount'];	
 							
 							foreach($this->items as $itemkey=>$item){	
-								if ($this->DiscountAppliesToItem($item, $discount_applied))
-								{	if ($discount_applied['discpc'] > 0)
-									{	$item_discount = (($item['total_with_tax'] - $this->ItemDiscountSum($item['discounts'])) * $discount_applied['discpc']) / 100;
+								if($this->DiscountAppliesToItem($item, $discount_applied)){
+									if($discount_applied['discpc'] > 0){
+										$item_discount = (($item['total_with_tax'] - $this->ItemDiscountSum($item['discounts'])) * $discount_applied['discpc']) / 100;
 										$discount_applied['applied_amount'][$itemkey] = $item_discount;
 										$this->items[$itemkey]['discounts']['discount'][$discount->id] = $item_discount;
-									} else
-									{	if ($amount_to_apply)
-										{	$item_balance = $item['total_with_tax'] - $this->ItemDiscountSum($this->items[$itemkey]['discounts']);
-											if ($amount_to_apply > $item_balance)
-											{	$discount_applied['applied_amount'][$itemkey] = $item_balance;
+									}else{
+										if($amount_to_apply){
+											$item_balance = $item['total_with_tax'] - $this->ItemDiscountSum($this->items[$itemkey]['discounts']);
+											if($amount_to_apply > $item_balance){
+												$discount_applied['applied_amount'][$itemkey] = $item_balance;
 												$this->items[$itemkey]['discounts']['discount'][$discount->id] = $item_balance;
 												$amount_to_apply -= $item_balance;
-											} else
-											{	$discount_applied['applied_amount'][$itemkey] = $amount_to_apply;
+											}else{
+												$discount_applied['applied_amount'][$itemkey] = $amount_to_apply;
 												$this->items[$itemkey]['discounts']['discount'][$discount->id] = $amount_to_apply;
 												$amount_to_apply = 0;
 											}
@@ -591,16 +601,18 @@ class StoreCart extends Base
 					$_SESSION[$this->sessionname][$rowid]['attendees'][$attid]['att_firstname'] = $data['att_firstname'][$key];
 					$_SESSION[$this->sessionname][$rowid]['attendees'][$attid]['att_surname'] = $data['att_surname'][$key];
 				} //else echo'not set';
-			//	$this->VarDump($_SESSION[$this->sessionname][$rowid]);
-			
-			// Sending email to attendee...
-			$mail = new HTMLMail();
-			$mail->SetSubject('Important message from IIDR');
-			$plainbody = 'Course is booked.';
-			$htmlbody = 'Course is booked.';
-			$mail->Send($att_email, $htmlbody, $plainbody);
-			$success[] = 'An email has been send to the attendee.';
-			
+				//	$this->VarDump($_SESSION[$this->sessionname][$rowid]);
+				
+				// Sending email to attendee...
+				$mail = new HTMLMail();
+				$mail->SetSubject('Important message from IIDR');
+				$plainbody = 'Course is booked.';
+				$htmlbody = 'Course is booked.';
+				
+				if($att_email != ''){
+					$mail->Send($att_email, $htmlbody, $plainbody);
+					$success[] = 'An email has been sent to the attendee(s).';
+				}
 			}
 		}
 		

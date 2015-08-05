@@ -359,7 +359,7 @@ class StoreOrder extends BlankItem
 				if (is_array($cart->discount) && $cart->discount)
 				{	foreach ($cart->discount as $cart_discount)
 					{	if ($cart_discount['applied_amount'] && $cart_discount['applied_amount'][$rowid])
-						{	$itemdiscounts[] = array('discid'=>$cart_discount['discid'], 'rowid'=>$rowid, 'amount'=>$cart_discount['applied_amount'][$rowid]);
+						{	$itemdiscounts[] = array('discid'=>$cart_discount['discid'],'ticket'=>$cart_discount['ticket'], 'rowid'=>$rowid, 'amount'=>$cart_discount['applied_amount'][$rowid]);
 							$item['discamount'] += $cart_discount['applied_amount'][$rowid];
 						}
 					}
@@ -466,7 +466,7 @@ class StoreOrder extends BlankItem
 									// record discounts used on this item
 									foreach ($itemdiscounts as $itemdiscount)
 									{	if ($itemdiscount['rowid'] == $rowid)
-										{	$disc_sql = 'INSERT INTO storeorderitemdiscounts SET itemid=' . $id . ', discid=' . $itemdiscount['discid'] . ', discamount=' . round($itemdiscount['amount'], 2);
+										{	$disc_sql = 'INSERT INTO storeorderitemdiscounts SET itemid=' . $id . ', discid=' . $itemdiscount['discid'] . ', ticket=' . $itemdiscount['ticket'] . ', discamount=' . round($itemdiscount['amount'], 2);
 											$this->db->Query($disc_sql);
 										}
 									}

@@ -18,7 +18,7 @@ Points 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12
 6  => Done 
 	a. => Done
 	b. => Done
-7  => Pending
+7  => Done
 8  => Done (Email defined as constant in config file)
 9  => Done
 10 => Done

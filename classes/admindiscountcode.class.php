@@ -5,10 +5,12 @@ class AdminDiscountCode extends DiscountCode
 	{	parent::__construct($id);
 	} // fn __construct
 	
-	public function ProductTypeDetails($ptype = false, $prodid = false, $form = true)
+	public function ProductTypeDetails($ptype = false, $prodid = false, $form = true,$ticketid=0)
 	{	ob_start();
-		if ($ptype = (($ptype === false) ? $this->details['prodtype'] : $ptype))
-		{	echo $this->prodtypes[$ptype], ': ';
+		if ($ptype = (($ptype === false) ? $this->details['prodtype'] : $ptype)){	
+			echo $this->prodtypes[$ptype], ': ';
+			$ticketid = (int)(($ticketid == '')?$this->details['ticket'] : $ticketid);
+			
 			if ($prodid = (int)(($prodid === false) ? $this->details['prodid'] : $prodid))
 			{	switch ($ptype)
 				{	case 'course':
@@ -37,14 +39,19 @@ class AdminDiscountCode extends DiscountCode
 			} else
 			{	echo 'any';
 			}
-			if ($form)
-			{	echo ' - <a onclick="DisplaySelectPTypePopUp(', (int)$this->id, ');">change this</a>';
+			if ($form){	
+				echo ' - <a onclick="DisplaySelectPTypePopUp(', (int)$this->id;
+				if($ticketid!='0'){
+					echo ',',(int)$ticketid;
+				}
+				echo ');">change this</a>';
 			}
 		} else
 		{	echo 'applies to anything';
 		}
 		if ($form)
 		{	echo '<input type="hidden" name="prodid" id="prodid" value="', (int)$prodid, '" />';
+			echo '<input type="hidden" name="ticketid" id="ticketid" value="', (int)$ticketid, '" />';
 		}
 		return ob_get_clean();
 	} // end of fn ProductTypeDetails
@@ -93,7 +100,7 @@ class AdminDiscountCode extends DiscountCode
 		$form->AddCheckBox('Live (useable)', 'live', '1', $data['live']);
 		$form->AddCheckBox('One use only per customer', 'oneuseperuser', '1', $data['oneuseperuser']);
 		
-		$form->AddSelect('Product type', 'prodtype', $data['prodtype'], '', $this->prodtypes, true, false, 'onchange="ChangedPType(' . (int)$this->id . ');"');
+		$form->AddSelect('Product type', 'prodtype', $data['prodtype'], '', $this->prodtypes, true, false, 'onchange="ChangedPType(' . (int)$this->id . ','.(int) $data['ticketid'].');"');
 		$form->AddRawText('<label>&nbsp;</label><span id="ptypeDetails">' . $this->ProductTypeDetails() . '</span><br />');
 		
 		$form->AddSubmitButton('', $this->id ? 'Save Changes' : 'Create New Discount Code', 'submit');
@@ -136,18 +143,19 @@ class AdminDiscountCode extends DiscountCode
 	} // end of fn ValidDiscountCode
 	
 	function Save($data = array())
-	{	$fail = array();
+	{	
+	$fail = array();
 		$success = array();
 		$fields = array();
 		$admin_actions = array();
 		
-		if ($discdesc = $this->SQLSafe($data['discdesc']))
-		{	$fields[] = 'discdesc="' . $discdesc . '"';
-			if ($this->id && ($data['discdesc'] != $this->details['discdesc']))
-			{	$admin_actions[] = array('action'=>'Description', 'actionfrom'=>$this->details['discdesc'], 'actionto'=>$data['discdesc']);
+		if ($discdesc = $this->SQLSafe($data['discdesc'])){	
+			$fields[] = 'discdesc="' . $discdesc . '"';
+			if ($this->id && ($data['discdesc'] != $this->details['discdesc'])){	
+				$admin_actions[] = array('action'=>'Description', 'actionfrom'=>$this->details['discdesc'], 'actionto'=>$data['discdesc']);
 			}
-		} else
-		{	$fail[] = 'Description missing';
+		}else{	
+			$fail[] = 'Description missing';
 		}
 		
 		if ($this->ValidDiscountCode($disccode = $data['disccode']))
@@ -159,8 +167,8 @@ class AdminDiscountCode extends DiscountCode
 				{	$admin_actions[] = array('action'=>'Code', 'actionfrom'=>$this->details['disccode'], 'actionto'=>$data['disccode']);
 				}
 			}
-		} else
-		{	$fail[] = 'Discount code invalid (4 to 20 letters and numbers only)';
+		}else{	
+			$fail[] = 'Discount code invalid (4 to 20 letters and numbers only)';
 		}
 		
 		// start date
@@ -259,6 +267,9 @@ class AdminDiscountCode extends DiscountCode
 		} else
 		{	$fail[] = 'You must apply some discount';
 		}
+		
+		$ticketid = $this->SQLSafe($data['ticketid']);		
+		$fields[] = 'ticket="' . (int)$ticketid . '"';
 		
 		if ($this->id || !$fail)
 		{	$set = implode(", ", $fields);
